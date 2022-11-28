@@ -1,0 +1,26 @@
+# The aws profile to use
+# Can be used to override the chosen profile, or set to `null` to force environment credentials
+aws-profile:
+
+# AWS region to use, overriding the aws-cli config
+aws-region:
+
+# aws-cli profile to get assume roles from, if different to `aws-profile`
+role-source-profile:
+
+# Roles to get from the AWS CLI config
+roles:
+
+# Roles to ignore from the AWS CLI config
+ignore-roles:
+
+# Number of seconds to cache resource responses for
+# Set to 0 to fetch resources every time
+cache-time:
+
+# IAM assumed role sessions
+session:
+  # Name to use
+  name:
+  # Duration in seconds
+  duration:
