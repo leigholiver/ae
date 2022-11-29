@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 import signal
 
@@ -19,6 +20,8 @@ def run(command, env = {}, role=None, interactive=True):
         **creds,
     }
 
+    # Odd compatibility note - if `shell`` is False on windows, things become non-interactive
+    # however, if `shell`` is True on linux and macos, things break
     if interactive:
         _ = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -26,7 +29,7 @@ def run(command, env = {}, role=None, interactive=True):
         subprocess.call(
             command,
             env=env,
-            shell=True
+            shell=(platform.system() == "Windows")
         )
 
         signal.signal(signal.SIGINT, _)
