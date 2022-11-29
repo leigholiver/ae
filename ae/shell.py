@@ -26,6 +26,7 @@ def run(command, env = {}, role=None, interactive=True):
         subprocess.call(
             command,
             env=env,
+            shell=True
         )
 
         signal.signal(signal.SIGINT, _)
