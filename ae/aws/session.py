@@ -15,8 +15,8 @@ def credentials(role=None):
     return {
         "AWS_ACCESS_KEY_ID": creds.access_key,
         "AWS_SECRET_ACCESS_KEY": creds.secret_key,
-        "AWS_SESSION_TOKEN": creds.token,
-        "AWS_SECURITY_TOKEN": creds.token,
+        "AWS_SESSION_TOKEN": creds.token if creds.token else '',
+        "AWS_SECURITY_TOKEN": creds.token if creds.token else '',
         "AWS_REGION": _session.region_name,
     }
 
