@@ -1,6 +1,10 @@
 # ae
 awscli extended
 
+prerequisites:
+- [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [session manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+
 usage:
 ```bash
 $ ae [-p/--profile <aws cli profile>] <command>
