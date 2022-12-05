@@ -7,9 +7,9 @@ async def loop(executor, args_list):
     tasks = []
     loop = asyncio.get_event_loop()
     for args in args_list:
-            tasks.append(
-                loop.run_in_executor(executor, *args)
-            )
+        tasks.append(
+            loop.run_in_executor(executor, *args)
+        )
 
     completed, pending = await asyncio.wait(tasks)
 

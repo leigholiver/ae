@@ -18,6 +18,10 @@ ignore-roles:
 # Set to 0 to fetch resources every time
 cache-time:
 
+# Whether to keep a local cache of assumed role credentials
+# Default true, set to false to disable
+cache-credentials: true
+
 # IAM assumed role sessions
 session:
   # Name to use

@@ -2,17 +2,18 @@ import os
 import platform
 import subprocess
 import signal
+from InquirerPy import inquirer
 
 try:
     import readline
 except:
     pass
 
-from .aws import session
+from .aws import credentials
 
 def run(command, env = {}, role=None, interactive=True):
 
-    creds = session.credentials(role)
+    creds = credentials.credentials(role)
 
     env = {
         **os.environ,
@@ -20,8 +21,11 @@ def run(command, env = {}, role=None, interactive=True):
         **creds,
     }
 
-    # Odd compatibility note - if `shell`` is False on windows, things become non-interactive
-    # however, if `shell`` is True on linux and macos, things break
+    # Compatibility notes
+    # - if `shell` is False on windows, things become non-interactive
+    #   however, if `shell` is True on linux and macos, things break
+    # - if `interactive` is true, we remove the SIGINT (ctrl+c) signal
+    #   to prevent it quitting the python app rather than passing it through
     if interactive:
         _ = signal.getsignal(signal.SIGINT)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -44,32 +48,9 @@ def run(command, env = {}, role=None, interactive=True):
         except subprocess.CalledProcessError as e:
             return f"Command exited with code {e.returncode}\n{e.output.decode('utf-8')}"
 
-
-# https://stackoverflow.com/a/64536882
-def choose(options, name, name_field):
-    if len(options) == 0:
-        return None
-
-    elif len(options) == 1:
-        return list(options.values())[0]
-
-    index = 0
-    indexValidList = []
-    print('Select a ' + name + ':')
-    for optionName in options:
-        index = index + 1
-        indexValidList.extend([options[optionName]])
-        print(str(index) + ') ' + optionName)
-    inputValid = False
-    while not inputValid:
-        inputRaw = input(name.capitalize() + ': ')
-        inputNo = int(inputRaw) - 1
-        if inputNo > -1 and inputNo < len(indexValidList):
-            selected = indexValidList[inputNo]
-            print('Selected ' +  name + ': ' + selected[name_field])
-            inputValid = True
-            break
-        else:
-            print('Please select a valid ' + name + ' number')
-
-    return selected
+def choose(options, message):
+    choice = inquirer.fuzzy(
+        message=message,
+        choices=options
+    ).execute()
+    return options[choice]

@@ -1,64 +1,52 @@
 import boto3
+import time
 import threading
 
 from .. import config
+from . import credentials
 
 _sessions = {}
 
+# name of all sessions, including "None" - the root session
 def names():
     return [None] + list(config.get("roles", {}).keys())
-
-def credentials(role=None):
-    _session = session(role)
-    creds = _session.get_credentials()
-
-    return {
-        "AWS_ACCESS_KEY_ID": creds.access_key,
-        "AWS_SECRET_ACCESS_KEY": creds.secret_key,
-        "AWS_SESSION_TOKEN": creds.token if creds.token else '',
-        "AWS_SECURITY_TOKEN": creds.token if creds.token else '',
-        "AWS_REGION": _session.region_name,
-    }
 
 def client(service, role=None):
     return session(role).client(service)
 
 def session(role=None):
+    global _sessions
+
+    # If this thread does not already have a session cache, create one
     thread_id = threading.get_ident()
     if thread_id not in _sessions.keys():
          _sessions[thread_id] = {}
 
-    if not role:
-        if "ae_root_session" not in _sessions[thread_id].keys():
-            _sessions[thread_id]["ae_root_session"] = boto3.session.Session(
-                region_name=config.get("aws-region"),
-                profile_name=config.get("aws-profile")
-            )
-        return _sessions[thread_id]["ae_root_session"]
+    # Tag the root session so that it has a key...
+    name = "ae-root-session" if not role else role
 
-    role_data = config.get(f"roles.{role}", None)
-    if not role_data:
-        raise Exception(f"Unknown role {role}")
+    # If we already have a session, return it
+    if name in _sessions[thread_id].keys():
+        return _sessions[thread_id][name]
 
-    if role not in _sessions[thread_id].keys():
-        _sessions[thread_id][role] = _assume_role(role_data)
-    return _sessions[thread_id][role]
+    if role:
+        kwargs = _assume_role(role)
+    else:
+        kwargs = {
+            "region_name": config.get("aws-region"),
+            "profile_name": config.get("aws-profile"),
+        }
+
+    output = boto3.session.Session(**kwargs)
+    _sessions[thread_id][name] = output
+    return output
 
 def _assume_role(role):
-    if "region" not in role.keys():
-        role["region"] = config.get("aws-region")
+    creds = credentials.from_role(role)
 
-    sts = client("sts")
-
-    response = sts.assume_role(
-        RoleArn=role["arn"],
-        RoleSessionName=config.get("session.name", "ae-aws-extended"),
-        DurationSeconds=config.get("session.duration", 900)
-    )
-
-    return boto3.session.Session(
-        aws_access_key_id=response["Credentials"]["AccessKeyId"],
-        aws_secret_access_key=response["Credentials"]["SecretAccessKey"],
-        aws_session_token=response["Credentials"]["SessionToken"],
-        region_name=role["region"]
-    )
+    return {
+        "aws_access_key_id": creds["AccessKeyId"],
+        "aws_secret_access_key": creds["SecretAccessKey"],
+        "aws_session_token": creds["SessionToken"],
+        "region_name": creds["region"],
+    }

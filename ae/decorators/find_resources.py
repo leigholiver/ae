@@ -9,7 +9,7 @@ def find_resources(arg_name, kinds=[], single=True):
 
             res = resources.find_resources(kwargs[arg_name], kinds)
             if single:
-                res = choose({ r["Ident"]: r for r in res }, "resource", "Ident")
+                res = choose({ r["Ident"]: r for r in res }, "Choose a resource")
 
             kwargs[arg_name] = res
             fn(*args, **kwargs)

@@ -30,6 +30,7 @@ def load(aws_profile=None):
     config_file = f"{__base_path__}/ae.yml"
     if aws_profile:
         config_file = f"{__base_path__}/{aws_profile}.yml"
+        config["name"] = aws_profile
 
     # load in the config file
     if os.path.isfile(config_file):
@@ -42,6 +43,7 @@ def load(aws_profile=None):
     # parse the aws config file
     if "role-source-profile" in config.keys():
         aws_cfg = parse_aws_config(config["role-source-profile"])
+        config["name"] = config["role-source-profile"]
 
     else:
         aws_cfg = parse_aws_config(config["aws-profile"])

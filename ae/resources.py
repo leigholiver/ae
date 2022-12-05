@@ -22,7 +22,7 @@ def build_ident(data, unique_id=None, role=None):
     return output
 
 def find_kind(role, kind):
-    profile = config.get("aws-profile", "default")
+    profile = config.get("name", "default")
     cfg_path = config.get_path()
     if cfg_path:
         profile = os.path.splitext( os.path.basename(cfg_path) )[0]
@@ -36,7 +36,7 @@ def find_kind(role, kind):
         with open(data_file, "r") as file:
             cached = json.load(file)
             if "timestamp" in cached.keys():
-                expired = (time.time() - cached["timestamp"]) > config.get("cache-time", 60)
+                expired = (time.time() - cached["timestamp"]) >= config.get("cache-time", 60)
                 if not expired:
                     return cached["resources"]
 
@@ -65,6 +65,9 @@ def find_kind(role, kind):
     return resources
 
 def find_resources(ident, kinds=[]):
+    if not ident:
+        ident = ""
+
     args = []
     for kind in kinds:
         for name in session.names():

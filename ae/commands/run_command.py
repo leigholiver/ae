@@ -5,6 +5,8 @@ from .. import ae
 from ..aws import ec2
 from ..aws import ecs
 from ..decorators import find_resources
+from InquirerPy import inquirer
+from InquirerPy.base import Choice
 
 description = """\b
 Run a command on instances/tasks
@@ -35,11 +37,18 @@ def run_command(resources, command):
         sys.exit(1)
 
     if len(resources) > 1:
-        resource_ids = "\n - ".join([r["Ident"] for r in resources])
-        click.confirm(
-            f"Do you want to run `{command}` against {len(resources)} resources? \n\n - {resource_ids}\n",
-            abort=True
-        )
+        choices = inquirer.checkbox(
+            message=f"""Do you want to run `{command}` against these resources?
+Space to toggle, Enter to continue, Ctrl + C to abort...
+""",
+            choices=[
+                Choice(r["Ident"], enabled=True)
+                for r in resources
+            ],
+            validate=lambda result: len(result) >= 1,
+            transformer=lambda result: f"{len(result)} resource{'s' if len(result) > 1 else ''} selected",
+        ).execute()
+        resources = [ r for r in resources if r["Ident"] in choices]
 
     results = []
 
