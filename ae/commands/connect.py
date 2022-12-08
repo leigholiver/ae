@@ -17,6 +17,7 @@ Connect to a resource via CLI
 @click.argument("resource", required=False)
 @find_resources("resource", kinds=["ec2", "ecs"])
 def connect(resource):
+    print(f"Connecting to {resource['Ident']}")
     match resource["Kind"]:
         case "ec2":
             ec2.connect(resource)
