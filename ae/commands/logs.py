@@ -2,7 +2,7 @@ import click
 import time
 
 from .. import ae
-from ..decorators import find_resources
+from ..decorators import find_resources_multi
 from ..aws import session
 
 description = """\b
@@ -28,41 +28,51 @@ Show logs from a Cloudwatch log group
     type=int,
     help='Time in minutes to get logs since (default 5)'
 )
-@click.argument("log_group")
-@find_resources("log_group", kinds=["logs"])
-def logs_cmd(follow, since, log_group):
-
-    client = session.client("logs", log_group["Role"])
+@click.argument("log_groups", nargs=-1)
+@find_resources_multi("log_groups", kinds=["logs"])
+def logs_cmd(follow, since, log_groups):
     start_time = ( int(time.time()) - (since * 60) ) * 1000
 
-    while True:
-        events = _get_logs(client, log_group, start_time)
+    clients = {}
+    for log_group in log_groups:
+        clients[log_group["Ident"]] = session.client("logs", log_group["Role"])
 
-        for event in events:
-            if event["timestamp"] > start_time:
-                start_time = event["timestamp"]
-            print(event["message"])
+    while True:
+        events = []
+        for log_group in log_groups:
+            events += _get_logs(clients[log_group["Ident"]], log_group, start_time)
+
+        if len(events) > 0:
+            events = sorted(events, key=lambda e: e["timestamp"])
+            start_time = events[-1]["timestamp"]
+
+            for event in events:
+                msg = event['message']
+                if len(log_groups) > 1:
+                    msg = f"{event['logStreamName'].split('/')[0]: >20} | {event['message']}"
+
+                print(msg)
 
         if not follow:
             break
 
         time.sleep(5)
 
-def _get_logs(client, lg, start_time, end_time=None):
+def _get_logs(client, log_group, start_time, end_time=None):
 
     if not end_time:
         end_time = int(time.time()) * 1000
 
     events = []
     kwargs = {
-        "logGroupName": lg["logGroupName"],
-        "startTime": start_time,
+        "logGroupName": log_group["logGroupName"],
+        "startTime": start_time + 1,
         "endTime": end_time,
     }
     while True:
         response = client.filter_log_events(**kwargs)
         for event in response["events"]:
-            yield event
+            events.append(event)
 
         if "nextToken" not in response.keys():
             break
