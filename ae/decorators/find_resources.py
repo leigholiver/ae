@@ -42,10 +42,7 @@ def find_resources_multi(arg_name, kinds=[]):
                 print("No resources found...")
                 sys.exit(1)
 
-            elif len(output) == 1:
-                output = output[0]
-
-            else:
+            elif len(output) > 1:
                 choices = inquirer.checkbox(
                     message=f"""Choose resources...
 Space to toggle, Enter to continue, Ctrl + C to abort...
