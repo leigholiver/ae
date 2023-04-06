@@ -12,7 +12,7 @@ from .aws import ecs
 from .aws import logs
 
 def build_ident(data, unique_id=None, role=None):
-    output = data["Name"]
+    output = data["Name"] if data["Name"] else ""
     if role:
         output += f"-{role}"
 

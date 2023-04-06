@@ -1,6 +1,7 @@
 import click
 import time
 
+from colorama import Fore
 from .. import ae
 from ..decorators import find_resources_multi
 from ..aws import session
@@ -49,9 +50,9 @@ def logs_cmd(follow, since, log_groups):
             for event in events:
                 msg = event['message']
                 if len(log_groups) > 1:
-                    msg = f"{event['logStreamName'].split('/')[0]: >20} | {event['message']}"
+                    msg = f"{_get_styled_name(event['logStreamName'])} | {event['message']}"
 
-                print(msg)
+                click.echo(msg)
 
         if not follow:
             break
@@ -80,3 +81,26 @@ def _get_logs(client, log_group, start_time, end_time=None):
         kwargs["nextToken"] = response["nextToken"]
 
     return events
+
+_colors = [
+    'green',
+    'yellow',
+    'blue',
+    'magenta',
+    'cyan',
+    'bright_green',
+    'bright_yellow',
+    'bright_blue',
+    'bright_magenta',
+    'bright_cyan',
+]
+_name_colors = {}
+def _get_styled_name(logStreamName):
+    global _colors
+    global _name_colors
+
+    name = logStreamName.split('/')[0]
+    if name not in _name_colors.keys():
+        _name_colors[name] = _colors[ len(_name_colors) % len(_colors) ]
+
+    return click.style(f"{name: >25}", fg=_name_colors[name], bold=True)

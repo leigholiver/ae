@@ -1,3 +1,5 @@
+import json
+
 from .. import resources
 from . import session
 from .. import shell
@@ -32,15 +34,34 @@ def describe_tasks(role=None):
             t["Kind"] = "ecs"
             t["Id"] = t["taskArn"].split("/")[-1]
 
-            t["Ident"] = resources.build_ident(
-                t,
-                unique_id=t["Id"],
-                role=role
-            )
+            if len(t['containers']) == 1:
+                t["Ident"] = resources.build_ident(
+                    t,
+                    unique_id=t["Id"],
+                    role=role
+                )
 
-            # You can use this to use the same SSM functions as with EC2 - https://stackoverflow.com/a/67641633
-            t["InstanceId"] = f"ecs:{t['tags']['aws:ecs:clusterName']}_{t['Id']}_{t['containers'][0]['runtimeId']}"
-            tasks.append(t)
+                # You can use this to use some of the EC2 SSM functions - https://stackoverflow.com/a/67641633
+                t["InstanceId"] = f"ecs:{t['tags']['aws:ecs:clusterName']}_{t['Id']}_{t['containers'][0]['runtimeId']}"
+                tasks.append(t)
+            else:
+                for c in t['containers']:
+                    # clone the task so that we can create a resource-per-container
+                    current = t.copy()
+
+                    # remove the other containers
+                    current["containers"] = [c]
+
+                    current["Ident"] = f"{c['name']}-"
+                    current["Ident"] += resources.build_ident(
+                        current,
+                        unique_id=current["Id"],
+                        role=role
+                    )
+
+                    # You can use this to use some of the EC2 SSM functions - https://stackoverflow.com/a/67641633
+                    current["InstanceId"] = f"ecs:{current['tags']['aws:ecs:clusterName']}_{current['Id']}_{c['runtimeId']}"
+                    tasks.append(current)
 
     return tasks
 

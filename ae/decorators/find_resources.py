@@ -36,7 +36,9 @@ def find_resources_multi(arg_name, kinds=[]):
         def wrapper(*args, **kwargs):
             output = []
             for ident in kwargs[arg_name]:
-                output += resources.find_resources(ident, kinds)
+                res = resources.find_resources(ident, kinds)
+                if res:
+                    output += res
 
             if len(output) == 0:
                 print("No resources found...")
