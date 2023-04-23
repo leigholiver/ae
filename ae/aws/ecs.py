@@ -60,7 +60,9 @@ def describe_tasks(role=None):
                     )
 
                     # You can use this to use some of the EC2 SSM functions - https://stackoverflow.com/a/67641633
-                    current["InstanceId"] = f"ecs:{current['tags']['aws:ecs:clusterName']}_{current['Id']}_{c['runtimeId']}"
+                    if 'aws:ecs:clusterName' in current['tags'].keys():
+                        current["InstanceId"] = f"ecs:{current['tags']['aws:ecs:clusterName']}_{current['Id']}_{c['runtimeId']}"
+
                     tasks.append(current)
 
     return tasks

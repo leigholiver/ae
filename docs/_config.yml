@@ -1,0 +1,6 @@
+remote_theme: pages-themes/minimal@v0.2.0
+plugins:
+- jekyll-remote-theme
+title: ae
+description: cli tool for simplifying AWS tasks
+google_analytics: UA-180824262-1
