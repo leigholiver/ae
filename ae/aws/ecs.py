@@ -29,7 +29,15 @@ def describe_tasks(role=None):
                 continue
 
             t["tags"] = { tag["key"]: tag["value"] for tag in t["tags"] }
-            t["Name"] = t["tags"].get("aws:ecs:serviceName")
+
+            # we can get these from ecs managed tags, but only works on EC2 launch type
+            # to rely on them later on, we set the expected tags
+            cluster_name = "".join(t["clusterArn"].split("/")[1:])
+            service_name = t['group'].replace("service:", "")
+            t['tags']['aws:ecs:clusterName'] = cluster_name
+            t['tags']['aws:ecs:serviceName'] = service_name
+
+            t["Name"] = service_name
             t["Role"] = role
             t["Kind"] = "ecs"
             t["Id"] = t["taskArn"].split("/")[-1]
@@ -42,8 +50,8 @@ def describe_tasks(role=None):
                 )
 
                 # You can use this to use some of the EC2 SSM functions - https://stackoverflow.com/a/67641633
-                if 'aws:ecs:clusterName' in t['tags'].keys():
-                    t["InstanceId"] = f"ecs:{t['tags']['aws:ecs:clusterName']}_{t['Id']}_{t['containers'][0]['runtimeId']}"
+                if 'runtimeId' in t['containers'][0].keys():
+                    t["InstanceId"] = f"ecs:{cluster_name}_{t['Id']}_{t['containers'][0]['runtimeId']}"
                 tasks.append(t)
 
             else:
@@ -62,9 +70,8 @@ def describe_tasks(role=None):
                     )
 
                     # You can use this to use some of the EC2 SSM functions - https://stackoverflow.com/a/67641633
-                    if 'aws:ecs:clusterName' in current['tags'].keys():
-                        current["InstanceId"] = f"ecs:{current['tags']['aws:ecs:clusterName']}_{current['Id']}_{c['runtimeId']}"
-
+                    if 'runtimeId' in c.keys():
+                        current["InstanceId"] = f"ecs:{cluster_name}_{current['Id']}_{c['runtimeId']}"
                     tasks.append(current)
 
     return tasks

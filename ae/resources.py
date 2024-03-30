@@ -10,6 +10,7 @@ from .aws import session
 from .aws import ec2
 from .aws import ecs
 from .aws import logs
+from .aws import opensearch
 
 def build_ident(data, unique_id=None, role=None):
     output = data["Name"] if data["Name"] else ""
@@ -48,6 +49,8 @@ def find_kind(role, kind):
             resources = ecs.describe_tasks(role)
         case "logs":
             resources = logs.describe_log_groups(role)
+        case "es":
+            resources = opensearch.describe_domains(role)
         case _:
             raise Exception(f"Cant find unknown resource kind {kind}")
 
