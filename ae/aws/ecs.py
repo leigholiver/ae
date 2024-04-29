@@ -28,7 +28,7 @@ def describe_tasks(role=None):
             if t["lastStatus"] != "RUNNING":
                 continue
 
-            t["tags"] = { tag["key"]: tag["value"] for tag in t["tags"] }
+            t["tags"] = { tag["key"]: tag["value"] for tag in t["tags"] } if "tags" in t.keys() else {}
 
             # we can get these from ecs managed tags, but only works on EC2 launch type
             # to rely on them later on, we set the expected tags
