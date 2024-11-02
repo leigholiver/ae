@@ -20,10 +20,11 @@ Forward a local port to a remote port on an instance/container
 @find_resources("resource", kinds=["ec2", "ecs"])
 def port_forward(resource, ports):
 
-    result = re.search(r"([0-9]+):([0-9]+)", ports)
+    result = re.search(r"([0-9]+)(?::([0-9]+))?", ports)
     if not result:
         print(f"Invalid port combination {ports}")
         sys.exit(1)
 
     local, remote = result.groups()
+    remote = remote if remote else local
     ec2.port_forward(resource, local, remote)
