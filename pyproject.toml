@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ae"
-version = "0.0.2"
+version = "0.0.3"
 description = ""
 authors = ["Leigh Oliver <leigh@leigholiver.com>"]
 readme = "README.md"
