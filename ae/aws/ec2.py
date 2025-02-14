@@ -5,14 +5,11 @@ from . import session
 from .. import shell
 from .. import resources
 
+
 def describe_running_instances(role=None, filters=[]):
-    filters += [
-        {
-            "Name"  : "instance-state-name",
-            "Values": ["running"]
-        }
-    ]
+    filters += [{"Name": "instance-state-name", "Values": ["running"]}]
     return describe_instances(role, filters)
+
 
 def describe_instances(role=None, filters=[]):
 
@@ -21,21 +18,20 @@ def describe_instances(role=None, filters=[]):
     instances = []
     next_token = ""
     while True:
-        response = client.describe_instances(
-            Filters=filters,
-            NextToken=next_token
-        )
+        response = client.describe_instances(Filters=filters, NextToken=next_token)
         for res in response["Reservations"]:
             for i in res["Instances"]:
-                i["Tags"] = { tag["Key"]: tag["Value"] for tag in i["Tags"] }
+                i["Tags"] = (
+                    {tag["Key"]: tag["Value"] for tag in i["Tags"]}
+                    if "Tags" in i.keys()
+                    else {}
+                )
                 i["Name"] = i["Tags"].get("Name")
                 i["Role"] = role
                 i["Kind"] = "ec2"
 
                 i["Ident"] = resources.build_ident(
-                    i,
-                    unique_id=i["InstanceId"].replace("-", ""),
-                    role=role
+                    i, unique_id=i["InstanceId"].replace("-", ""), role=role
                 )
                 instances.append(i)
 
@@ -46,24 +42,35 @@ def describe_instances(role=None, filters=[]):
 
     return instances
 
+
 def connect(instance):
     shell.run(
         ["aws", "ssm", "start-session", "--target", instance["InstanceId"]],
-        role=instance["Role"]
+        role=instance["Role"],
     )
+
 
 def port_forward(instance, local_port, remote_port):
     shell.run(
         [
-            "aws", "ssm", "start-session", "--target", instance["InstanceId"],
-            "--document-name", "AWS-StartPortForwardingSession",
-            "--parameters", json.dumps({
-                "localPortNumber": [ str(local_port) ],
-                "portNumber"     : [ str(remote_port) ],
-            })
+            "aws",
+            "ssm",
+            "start-session",
+            "--target",
+            instance["InstanceId"],
+            "--document-name",
+            "AWS-StartPortForwardingSession",
+            "--parameters",
+            json.dumps(
+                {
+                    "localPortNumber": [str(local_port)],
+                    "portNumber": [str(remote_port)],
+                }
+            ),
         ],
-        role=instance["Role"]
+        role=instance["Role"],
     )
+
 
 def run_command(instances, command):
 
@@ -73,7 +80,7 @@ def run_command(instances, command):
         response = ssm.send_command(
             DocumentName="AWS-RunShellScript",
             Parameters={"commands": [command]},
-            InstanceIds=[instance["InstanceId"]]
+            InstanceIds=[instance["InstanceId"]],
         )
 
         # wait for the command to complete...
@@ -83,7 +90,7 @@ def run_command(instances, command):
 
             status_response = ssm.get_command_invocation(
                 CommandId=response["Command"]["CommandId"],
-                InstanceId=instance["InstanceId"]
+                InstanceId=instance["InstanceId"],
             )
 
             if status_response["Status"] not in ["InProgress", "Pending"]:
