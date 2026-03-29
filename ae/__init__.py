@@ -1,7 +1,7 @@
 from pathlib import Path
 __home__ = str(Path.home())
 __base_path__ = f"{__home__}/.ae"
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 from . import config
 from . import decorators

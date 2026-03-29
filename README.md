@@ -36,3 +36,36 @@ $ ae [-p/--profile <aws cli profile>] <command> [--help]
     - `ae -p <aws cli profile> <command>`
 
 > Full usage instructions can be found in the [documentation](https://leigholiver.com/ae)
+
+### Nix
+Add this repo to your flake inputs
+```nix
+inputs = {
+  ae.url = "github:leigholiver/ae";
+};
+```
+
+If you have `nixpkgs` or `poetry2nix` in your flake inputs, you can pin ae's dependencies to your versions:
+```nix
+inputs = {
+  ae = {
+    url = "github:leigholiver/ae";
+    inputs.nixpkgs.follows = "nixpkgs";
+    inputs.poetry2nix.follows = "poetry2nix";
+  };
+};
+```
+
+Install the package
+```nix
+# nixos
+environment.systemPackages = [ inputs.ae.packages.${pkgs.system}.default ];
+# home-manager
+home.packages = [ inputs.ae.packages.${pkgs.system}.default ];
+```
+
+#### dev/build
+The flake provides a dev shell which can be entered with `nix develop`.
+In the dev shell, running `ae` will use the local dev version.
+
+To build the package, run `nix build`, and the output will be placed in the `result/` directory.
