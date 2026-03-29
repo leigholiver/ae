@@ -59,9 +59,9 @@ inputs = {
 Install the package
 ```nix
 # nixos
-environment.systemPackages = [ inputs.ae.packages.${pkgs.system}.default ];
+environment.systemPackages = [ inputs.ae.packages.${pkgs.stdenv.hostPlatform.system}.default ];
 # home-manager
-home.packages = [ inputs.ae.packages.${pkgs.system}.default ];
+home.packages = [ inputs.ae.packages.${pkgs.stdenv.hostPlatform.system}.default ];
 ```
 
 #### dev/build
