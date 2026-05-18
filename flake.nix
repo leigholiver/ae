@@ -5,7 +5,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     poetry2nix = {
       url = "github:nix-community/poetry2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -21,27 +20,28 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; })
+        p2nPkgs = poetry2nix.inputs.nixpkgs.legacyPackages.${system};
+        inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = p2nPkgs; })
           mkPoetryApplication
           mkPoetryEnv
           defaultPoetryOverrides
           ;
         overrides = defaultPoetryOverrides.extend (
           final: prev: {
-            pyproject-hooks = pkgs.python3Packages.pyproject-hooks;
-            build = pkgs.python3Packages.build;
-            pyyaml = pkgs.python3Packages.pyyaml;
-            boto3 = pkgs.python3Packages.boto3;
-            click = pkgs.python3Packages.click;
-            click-aliases = pkgs.python3Packages.click-aliases;
-            colorama = pkgs.python3Packages.colorama;
-            inquirerpy = pkgs.python3Packages.inquirerpy;
-            requests-aws4auth = pkgs.python3Packages.requests-aws4auth;
+            pyproject-hooks = p2nPkgs.python3Packages.pyproject-hooks;
+            build = p2nPkgs.python3Packages.build;
+            pyyaml = p2nPkgs.python3Packages.pyyaml;
+            boto3 = p2nPkgs.python3Packages.boto3;
+            click = p2nPkgs.python3Packages.click;
+            click-aliases = p2nPkgs.python3Packages.click-aliases;
+            colorama = p2nPkgs.python3Packages.colorama;
+            inquirerpy = p2nPkgs.python3Packages.inquirerpy;
+            requests-aws4auth = p2nPkgs.python3Packages.requests-aws4auth;
           }
         );
       in
       {
-        formatter = nixpkgs.legacyPackages.${system}.nixfmt;
+        formatter = pkgs.nixfmt;
 
         packages.default = mkPoetryApplication {
           projectDir = self;
